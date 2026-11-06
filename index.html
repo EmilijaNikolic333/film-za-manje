@@ -3,7 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Karta Za Manje</title>
+<title>Film za manje</title>
+<meta name="description" content="Svi filmovi u beogradskim bioskopima ove nedelje, sa terminima poređanim od najjeftinije karte.">
+<meta name="theme-color" content="#B3243B">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
@@ -40,13 +44,16 @@ header p{margin:8px 0 0;color:var(--muted);max-width:60ch}
 .check input{width:18px;height:18px;accent-color:var(--accent)}
 button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .daynote{font-size:13px;color:var(--gold);font-weight:500}
+.daynote:empty{display:none}
 .films{display:flex;flex-direction:column;gap:8px}
 details.film{background:var(--paper);border:1px solid var(--line);border-radius:10px}
-details.film>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:12px 14px;align-items:center}
+details.film>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:2px 12px;padding:10px 14px 10px 10px;align-items:center}
 details.film>summary::-webkit-details-marker{display:none}
-.ft{font-weight:600;font-size:16px;min-width:0}
-.fm{font-size:13px;color:var(--muted)}
-.from{text-align:right;grid-row:span 2}
+.poster{grid-column:1;grid-row:1/3;width:56px;aspect-ratio:2/3;border-radius:5px;object-fit:cover;background:var(--line);display:block}
+div.poster{display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:26px;color:var(--muted)}
+.ft{grid-column:2;grid-row:1;align-self:end;font-weight:600;font-size:16px;line-height:1.3;min-width:0}
+.fm{grid-column:2;grid-row:2;align-self:start;font-size:13px;color:var(--muted)}
+.from{grid-column:3;grid-row:1/3;text-align:right}
 .from small{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .from strong{font-family:var(--f-mono);font-size:20px;font-variant-numeric:tabular-nums;color:var(--accent)}
 details[open]>summary{border-bottom:1px dashed var(--line)}
@@ -69,15 +76,18 @@ details[open]>summary{border-bottom:1px dashed var(--line)}
 .empty{color:var(--muted);padding:12px 0}
 .foot{font-size:13px;color:var(--muted);display:grid;gap:6px;max-width:68ch}
 .foot a{color:var(--accent)}
+@media (max-width:420px){details.film>summary{grid-template-columns:48px minmax(0,1fr) auto}.poster{width:48px}}
 </style>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<!-- data.js pravi skripta scripts/update.mjs (GitHub Actions, svakog četvrtka) -->
+<script src="data.js"></script>
 </head>
 <body>
 
 <div class="wrap">
   <header>
-    <h1>Karta <span>za manje</span></h1>
-    <p>Svi filmovi koji ove nedelje idu u Beogradu. Otvori film i vidi svaki termin u Cineplexx-u, CineStaru i Tuckwoodu, poređan od najjeftinijeg.</p>
+    <h1>Film <span>za manje</span></h1>
+    <p>Svi filmovi koji ove nedelje idu u beogradskim bioskopima. Otvori film i vidi svaki termin u Cineplexx-u, CineStaru i Tuckwoodu, poređan od najjeftinijeg.</p>
   </header>
 
   <div class="days" id="days" role="group" aria-label="Dan"></div>
@@ -90,82 +100,39 @@ details[open]>summary{border-bottom:1px dashed var(--line)}
   <div class="films" id="films"></div>
 
   <div class="foot">
-    <div>Repertoar i cene se automatski osvežavaju svakog četvrtka ujutru. Trenutni repertoar važi za 6–11. novembar 2026, cene za jednu ulaznicu u dinarima, sa zvaničnih cenovnika. Tuckwood je objavio termine samo do nedelje 8. 11. Ne računaju se VIP i Love Box sedišta.</div>
-    <div><span class="tag est" style="margin:0">procena</span> znači da cenovnik te lokacije nije bio dostupan ceo, pa je cena izračunata po istoj razlici kao na drugim Cineplexx lokacijama. Za MX4D u Delta City-ju i IMAX van utorka cena nije objavljena.</div>
-    <div>Izvori: <a href="https://www.danubeogradu.rs/2026/11/bioskopski-repertoari-5-11-novembar-2026/" target="_blank" rel="noopener">repertoar Cineplexx</a> · <a href="https://cinestarcinemas.rs/beograd-concept-cinema-ada-mall" target="_blank" rel="noopener">CineStar Ada Mall</a> · <a href="https://www.tuck.rs/repertoar/" target="_blank" rel="noopener">Tuckwood</a> · cenovnici <a href="https://www.cineplexx.rs/info/price-list/CINEPLEXX-USCE-SHOPPING-CENTER" target="_blank" rel="noopener">Cineplexx</a>, <a href="https://cinestarcinemas.rs/cinestar-4dx-beograd/1741" target="_blank" rel="noopener">CineStar</a>, <a href="https://www.tuck.rs/cenovnik/" target="_blank" rel="noopener">Tuckwood</a></div>
+    <div id="period"></div>
+    <div><span class="tag est" style="margin:0">procena</span> znači da cenovnik te lokacije nije bio dostupan ceo, pa je cena izračunata po istoj razlici kao na drugim Cineplexx lokacijama. Za MX4D u Delta City-ju, IMAX van utorka i prenose uživo cena nije objavljena.</div>
+    <div>Izvori: <a href="https://www.cineplexx.rs/film" target="_blank" rel="noopener">Cineplexx</a> · <a href="https://cinestarcinemas.rs/beograd-concept-cinema-ada-mall" target="_blank" rel="noopener">CineStar Ada Mall</a> · <a href="https://www.tuck.rs/repertoar/" target="_blank" rel="noopener">Tuckwood</a> · cenovnici <a href="https://www.cineplexx.rs/info/price-list/CINEPLEXX-USCE-SHOPPING-CENTER" target="_blank" rel="noopener">Cineplexx</a>, <a href="https://cinestarcinemas.rs/cinestar-4dx-beograd/1741" target="_blank" rel="noopener">CineStar</a>, <a href="https://www.tuck.rs/cenovnik/" target="_blank" rel="noopener">Tuckwood</a></div>
   </div>
 </div>
 
 <script>
+/* ---------- Podaci: window.DATA iz data.js ----------
+   films: {id: {n: naziv, len: minuta, poster: url, ev: prenos uživo}}
+   shows: [{f: film, c: bioskop, d: "YYYY-MM-DD", t: "HH:MM", fx: ["3D","MX4D","IMAX","4DX","SX"], l: "sinh"|"titl"|"ov"}] */
+const DATA=window.DATA||{films:{},shows:[],errors:[]};
+const FILMS=DATA.films;
+
+/* ---------- Državni praznici (bioskopi naplaćuju vikend cenu) ---------- */
+const HOLIDAYS={
+  "2026-11-11":"Dan primirja",
+  "2027-01-01":"Nova godina","2027-01-02":"Nova godina","2027-01-07":"Božić","2027-02-15":"Sretenje","2027-02-16":"Sretenje",
+  "2027-04-30":"Veliki petak","2027-05-01":"Praznik rada","2027-05-02":"Uskrs","2027-05-03":"Uskršnji ponedeljak","2027-05-04":"Praznik rada",
+  "2027-11-11":"Dan primirja",
+  "2028-01-01":"Nova godina","2028-01-02":"Nova godina","2028-01-03":"Nova godina","2028-01-07":"Božić","2028-02-15":"Sretenje","2028-02-16":"Sretenje",
+  "2028-04-14":"Veliki petak","2028-04-15":"Uskrs","2028-04-16":"Uskrs","2028-04-17":"Uskršnji ponedeljak","2028-05-01":"Praznik rada","2028-05-02":"Praznik rada",
+  "2028-11-11":"Dan primirja"
+};
+
 /* ---------- Dani ---------- */
-const DAYS=[
-  {k:"p", d:6, dow:5,label:"Pet"},{k:"s",d:7,dow:6,label:"Sub"},{k:"n",d:8,dow:0,label:"Ned"},
-  {k:"po",d:9,dow:1,label:"Pon"},{k:"u",d:10,dow:2,label:"Uto"},{k:"sr",d:11,dow:3,label:"Sre",holiday:"Dan primirja"}
-];
-const GROUP={p:"wd",po:"wd",u:"wd",sr:"wd",s:"we",n:"we"};
-
-/* ---------- Filmovi: trajanje u min, kids = podrazumevano sinhronizovan ---------- */
-const FILMS={
-  clay:{n:"Clayface",len:109}, konj:{n:"Divlji konj broj devet",len:118}, mama:{n:"Druga mama",len:93},
-  glav:{n:"Glavonja",len:100,kids:1}, godz:{n:"Godzilla Minus Zero",len:136}, keng:{n:"Kengur se vraća kući",len:100},
-  macak:{n:"Mačak u šeširu",len:107,kids:1}, malci:{n:"Malci i monstrumi",len:90,kids:1}, najez:{n:"Najezda",len:86},
-  odis:{n:"Odiseja",len:110}, ostrvo:{n:"Ostrvo sećanja",len:98,kids:1}, patrol:{n:"Patrolne šape: Dino avantura",len:88,kids:1},
-  pera:{n:"Pera Kojot protiv sistema",len:100,kids:1}, prit:{n:"Pritajeno zlo",len:93}, toy:{n:"Priča o igračkama 5",len:100,kids:1},
-  ram:{n:"Ramajana: Uspon legende",len:195}, razum:{n:"Razum i osećajnost",len:131}, roki:{n:"Ja sam Roki",len:128},
-  spid:{n:"Spajdermen: Novi dan",len:110}, srce:{n:"Srce zveri",len:101}, street:{n:"Street Fighter",len:119},
-  dub:{n:"U dubinama",len:106}, wild:{n:"Vajldvud: Tajna zabranjene šume",len:132}, velik:{n:"Veliko putovanje 3: Trka oko sveta",len:85,kids:1},
-  veriti:{n:"Veriti",len:117}, diger:{n:"Diger",len:128}, zuta:{n:"Žuta kravata",len:145}, oni:{n:"Oni koje volimo",len:135},
-  dete:{n:"Dete noći",len:91}, prir:{n:"Priručnik za superheroje",len:91,kids:1}, rocky:{n:"Rocky (50 godina)",len:119},
-  krist:{n:"Kristalna planeta",len:97,kids:1}, ovcica:{n:"Ovčica Šone 3: Bundevasti haos",len:81,kids:1}
-};
-
-/* ---------- Repertoari. Ključevi: a = svaki dan, wd = pet/pon/uto/sre, we = sub/ned, ili konkretan dan. "" = nema projekcije.
-   Oznake posle vremena: 3D, MX4D, IMAX, 4DX, SX (ScreenX), T (titlovano, original) ---------- */
-const SCHED={
- usce:{clay:"19:40,21:50",konj:"17:40,20:00,22:20",
-  mama:{a:"15:50,17:45,19:45,21:40",sr:"15:50,17:45,20:20,22:15"},
-  glav:{wd:"15:00",we:"13:50"},godz:"18:30,21:10",keng:"18:45",
-  macak:{p:"16:00 3D,18:10 3D,19:10 T",wd:"16:00 3D,17:00,18:10 3D,19:10 T",we:"12:30,13:30 3D,14:45,16:00 3D,17:00,18:10 3D,19:10 T"},
-  malci:{we:"12:15,14:15"},najez:{a:"20:10",sr:""},odis:{a:"17:15",p:"",s:""},
-  ostrvo:{wd:"15:45,18:00 3D",we:"13:30 3D,15:45,18:00 3D"},patrol:{wd:"15:40",we:"12:00,15:40"},pera:{wd:"15:15",we:"13:15,15:15"},
-  prit:{a:"20:20,22:15",s:"21:00",sr:"20:10"},toy:{we:"13:10"},ram:{a:"20:30",s:"20:20"},razum:"20:50",roki:{sr:"19:45,22:15"},
-  spid:"15:30,18:15 3D",srce:"17:30,21:20",street:"21:30",dub:{a:"22:00",sr:"22:05"},
-  wild:{wd:"16:20,19:00",we:"13:45,16:20,19:00"},velik:{wd:"15:15,17:00",we:"13:15,15:15,17:00"},veriti:"16:10,21:00"},
- delta:{clay:"21:30 MX4D",konj:"19:00,21:20",mama:"19:30 MX4D,21:00",glav:{wd:"15:15",we:"11:15,15:15"},
-  godz:{a:"20:30",po:"20:35",sr:"20:45"},roki:{sr:"20:15"},malci:{we:"13:15"},
-  macak:{wd:"15:00 3D MX4D,16:15,17:15 3D MX4D,18:30",we:"11:45,12:45 3D MX4D,14:00,15:00 3D MX4D,16:15,17:15 3D MX4D,18:30"},
-  ostrvo:{wd:"16:30,18:45 3D",we:"12:00,14:15 3D,16:30,18:45 3D"},patrol:{we:"11:30,13:30"},pera:"15:30",prit:"17:00",
-  srce:{a:"20:45",sr:"18:15"},dub:{a:"18:15",po:"",sr:""},wild:"17:30",velik:{wd:"16:30",we:"12:30,14:30,16:30"},veriti:{a:"20:00",po:"18:15"}},
- big:{clay:"17:10,21:30",konj:"19:00,21:20",mama:"20:00,22:00",godz:"20:15",roki:{sr:"19:30"},malci:{we:"12:45"},
-  macak:{wd:"16:00 3D,17:00,18:15 3D,19:20 T",we:"12:30,13:45 3D,14:45,16:00 3D,17:00,18:15 3D,19:20 T"},najez:"21:45",odis:{a:"19:15",sr:""},
-  ostrvo:{wd:"15:30,16:45 3D,17:45",we:"13:15,14:30 3D,15:30,16:45 3D,17:45"},patrol:{wd:"15:15",we:"13:00,15:15"},pera:"15:00",
-  prit:"18:00",srce:"19:45",wild:"17:15",velik:{wd:"16:15",we:"12:15,14:15,16:15"},veriti:"20:30"},
- beo:{clay:"19:00,21:30",konj:"19:20,21:45",mama:"17:15,20:15,22:15",glav:"15:00",godz:"18:45",roki:{sr:"20:50"},malci:{we:"12:45"},
-  macak:{wd:"15:15,16:30 3D,17:30,19:45 T",we:"12:00 3D,13:00,14:10 3D,15:15,16:30 3D,17:30,19:45 T"},najez:"16:15",odis:"20:30",
-  ostrvo:{wd:"15:30,16:45 3D,17:45",we:"12:15 3D,13:15,14:30 3D,15:30,16:45 3D,17:45"},patrol:{we:"12:30,14:20"},pera:{we:"13:30"},
-  prit:"21:15",ram:"20:00",srce:"18:15",street:"18:00",dub:"22:00",wild:"15:40",velik:{wd:"16:40",we:"12:50,14:45,16:40"},
-  veriti:{a:"18:30,20:50",sr:"18:30"}},
- gal:{clay:"17:50,20:00,22:10",konj:"17:15,19:30,21:50",mama:{a:"18:30,20:30,22:30",sr:"18:30,20:15,22:15"},glav:{wd:"15:30",we:"13:30,15:30"},
-  godz:{wd:"15:15 IMAX,18:00 IMAX,20:45 IMAX",we:"12:30 IMAX,15:15 IMAX,18:00 IMAX,20:45 IMAX"},roki:{sr:"20:30"},
-  macak:{wd:"15:20 3D,16:30,17:30 3D,18:45 T",we:"12:00,13:00 3D,14:15,15:20 3D,16:30,17:30 3D,18:45 T"},najez:{a:"22:15",sr:""},odis:"21:00",
-  ostrvo:{wd:"16:50",we:"12:15,14:30,16:50"},patrol:{we:"12:50,14:50"},pera:{wd:"15:45",we:"13:45,15:45"},prit:"21:15",ram:"19:45",
-  srce:{a:"20:15",sr:"19:00"},street:"17:00",dub:"19:00",wild:"15:00,17:40",velik:{wd:"16:40",we:"12:40,14:40,16:40"},veriti:"19:20,21:40"},
- ada:{konj:"20:10",ram:"21:15 SX",najez:"20:30",clay:"19:00 SX,20:55 4DX,22:20",dub:"22:10",diger:"21:20",veriti:"22:15",prit:"17:05 SX",
-  macak:{p:"16:45 4DX 3D,17:30,18:00 T",s:"11:00 4DX 3D,11:55,12:00,14:10 3D,15:15,16:45 4DX 3D,17:30,18:00 T",
-   n:"11:00 4DX 3D,11:55,13:00,14:10 3D,15:15,16:45 4DX 3D,17:30,18:00 T",po:"16:45 4DX 3D,17:30,18:00 T",u:"16:45 4DX 3D,17:00,18:00 T",
-   sr:"11:00 4DX 3D,11:55,13:00,14:10 3D,15:15,16:45 4DX 3D,17:30,18:00 T"},
-  velik:{wd:"16:05,17:50",we:"11:45,14:10,16:05,17:50",sr:"11:45,14:10,16:05,17:50"},
-  wild:{wd:"18:05",we:"15:15,18:05",sr:"15:15,18:05"},
-  ostrvo:{wd:"16:00",we:"11:00,11:55 SX,14:30 4DX 3D,16:00",sr:"11:00,11:55 SX,14:30 4DX 3D,16:00"},
-  ovcica:{a:"16:20",n:"11:15,16:20",sr:"11:15,16:20"},
-  mama:{a:"19:00 4DX,19:30,22:15",sr:"19:00 4DX,19:30"},
-  srce:{a:"18:00,20:00",s:"18:00",sr:"18:00"},street:{s:"14:45 SX",n:"14:45 SX",sr:"14:45 SX"},
-  godz:{a:"19:45",u:""},rocky:{s:"20:00"},krist:{s:"11:00",n:"11:15",sr:"11:15"},patrol:{n:"13:15",sr:"13:15"},roki:{sr:"20:00"}},
- tuck:{konj:"19:20",ram:"20:20",macak:{p:"15:20,16:20 3D,17:20",we:"12:20 3D,13:20,14:20 3D,15:20,16:20 3D,17:20"},mama:"21:00",
-  velik:{p:"15:10,17:00",we:"13:00,15:10,17:00"},dete:"21:40",zuta:"17:40",clay:"21:20",oni:"18:40",wild:"19:00",razum:"18:20",
-  ostrvo:{p:"16:40",we:"12:40,14:40,16:40"},prir:{p:"15:50",we:"12:10,14:00,15:50"},diger:"20:40"}
-};
-const TUCK_DAYS=["p","s","n"];
+const DOW=["Ned","Pon","Uto","Sre","Čet","Pet","Sub"];
+const pad=n=>String(n).padStart(2,"0");
+const todayStr=()=>{const n=new Date();return `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())}`};
+const dateObj=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)};
+const DAYS=[...new Set(DATA.shows.map(s=>s.d))].sort().map(k=>{
+  const dt=dateObj(k);
+  return {k,d:dt.getDate(),m:dt.getMonth()+1,dow:dt.getDay(),label:DOW[dt.getDay()],holiday:HOLIDAYS[k]};
+});
 
 /* ---------- Cene ---------- */
 const CPX={
@@ -211,47 +178,46 @@ function priceTuck(day,t,f,len){
 }
 
 /* ---------- Spajanje ---------- */
-function timesFor(spec,dk){
-  if(typeof spec==="string") return spec;
-  if(dk in spec) return spec[dk];
-  const g=GROUP[dk]; if(g in spec) return spec[g];
-  return spec.a||"";
-}
+const LANG={sinh:"sinh.",titl:"titl.",ov:"original bez titla"};
 function showsFor(day,student){
   const out={};
-  for(const cid in SCHED){
-    if(cid==="tuck"&&!TUCK_DAYS.includes(day.k)) continue;
-    for(const fid in SCHED[cid]){
-      const str=timesFor(SCHED[cid][fid],day.k); if(!str) continue;
-      for(const item of str.split(",")){
-        const [tm,...tags]=item.trim().split(" "); const t=min(tm), film=FILMS[fid];
-        const f={d3:tags.includes("3D"),mx4d:tags.includes("MX4D"),imax:tags.includes("IMAX"),x4:tags.includes("4DX"),sx:tags.includes("SX"),titl:tags.includes("T")};
-        let r,name;
-        if(CPX[cid]){r=priceCpx(CPX[cid],day,t,f);name=CPX[cid].name}
-        else if(cid==="ada"){r=priceAda(day,t,f,film.len,student);name=ADA.name}
-        else {r=priceTuck(day,t,f,film.len);name=TUCK.name}
-        (out[fid]=out[fid]||[]).push({cin:name,tm,t,f,lang:film.kids&&!f.titl?"sinh.":"titl.",...r});
-      }
-    }
+  for(const s of DATA.shows){
+    if(s.d!==day.k) continue;
+    const film=FILMS[s.f]; if(!film) continue;
+    const fx=s.fx||[], t=min(s.t), len=film.len||0;
+    const f={d3:fx.includes("3D"),mx4d:fx.includes("MX4D"),imax:fx.includes("IMAX"),x4:fx.includes("4DX"),sx:fx.includes("SX")};
+    let r,name;
+    if(CPX[s.c]){r=priceCpx(CPX[s.c],day,t,f);name=CPX[s.c].name}
+    else if(s.c==="ada"){r=priceAda(day,t,f,len,student);name=ADA.name}
+    else {r=priceTuck(day,t,f,len);name=TUCK.name}
+    if(film.ev||s.ev) r={na:"Posebna cena (prenos uživo)",note:"Prenos uživo"};
+    (out[s.f]=out[s.f]||[]).push({cin:name,tm:s.t,t,f,lang:LANG[s.l]||"titl.",...r});
   }
   return out;
 }
 
 /* ---------- Prikaz ---------- */
-const S={day:DAYS[0].k,open:new Set(),q:""};
+const S={day:DAYS[0]?.k,open:new Set(),q:""};
 const $=id=>document.getElementById(id);
-const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function fxTags(f){const a=[];if(f.imax)a.push("IMAX");if(f.mx4d)a.push("MX4D");if(f.x4)a.push("4DX");if(f.sx)a.push("ScreenX");a.push(f.d3?"3D":"2D");return a}
+const fmtDate=k=>{const d=dateObj(k);return `${d.getDate()}. ${d.getMonth()+1}.`};
 
 function nowMinutesFor(day){
-  const n=new Date(); if(n.getFullYear()!==2026||n.getMonth()!==10) return n.getMonth()>10||n.getFullYear()>2026?9999:-1;
-  if(n.getDate()>day.d) return 9999; if(n.getDate()<day.d) return -1; return n.getHours()*60+n.getMinutes();
+  const t=todayStr(); if(day.k<t) return 9999; if(day.k>t) return -1;
+  const n=new Date(); return n.getHours()*60+n.getMinutes();
+}
+function poster(film){
+  return film.poster
+    ?`<img class="poster" src="${esc(film.poster)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'poster',textContent:${esc(JSON.stringify(film.n[0]||"?"))}}))">`
+    :`<div class="poster" aria-hidden="true">${esc(film.n[0]||"?")}</div>`;
 }
 
 function render(){
+  if(!DAYS.length){$("films").innerHTML=`<p class="empty">Repertoar trenutno nije dostupan.</p>`;return}
   const day=DAYS.find(d=>d.k===S.day), student=$("student").checked, hide=$("hidepast").checked, now=nowMinutesFor(day);
   [...$("days").children].forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===S.day));
-  $("daynote").textContent=day.holiday?`${day.holiday}, državni praznik: Cineplexx, CineStar i Tuckwood naplaćuju vikend cene.`:(day.dow===2?"Utorak: snižene cene u Cineplexx-u i CineStaru.":"");
+  $("daynote").textContent=day.holiday?`${day.holiday}, državni praznik: Cineplexx, CineStar i Tuckwood naplaćuju vikend cene.`:(day.dow===2?"Utorak: snižene cene u Cineplexx-u i CineStaru.":day.dow===3?"Sreda: filmski dan u Tuckwoodu.":"");
   const all=showsFor(day,student), q=S.q.trim().toLowerCase();
   const rows=Object.entries(all).map(([fid,list])=>{
     list=list.filter(s=>!(hide&&s.t<now));
@@ -262,8 +228,8 @@ function render(){
   if(!rows.length){$("films").innerHTML=`<p class="empty">${q?"Nijedan film ne odgovara pretrazi.":"Za ovaj dan nema više termina."}</p>`;return}
   $("films").innerHTML=rows.map(({fid,film,list,best})=>{
     const cins=new Set(list.map(s=>s.cin)).size, bp=best?best.p:null;
-    return `<details class="film" data-fid="${fid}"${S.open.has(fid)?" open":""}>
-      <summary><div class="ft">${esc(film.n)}</div>
+    return `<details class="film" data-fid="${esc(fid)}"${S.open.has(fid)?" open":""}>
+      <summary>${poster(film)}<div class="ft">${esc(film.n)}</div>
         <div class="from">${best?`<small>od</small><strong>${bp}</strong>`:""}</div>
         <div class="fm">${list.length} ${list.length===1?"termin":"termina"} · ${cins} ${cins===1?"bioskop":"bioskopa"}${best?` · najjeftinije ${esc(best.cin)} u ${best.tm}`:""}</div></summary>
       <div class="shows">${list.map(s=>`<div class="stub${s.p!=null&&s.p===bp?" best":""}${s.t<now?" past":""}">
@@ -273,12 +239,25 @@ function render(){
       </div>`).join("")}</div></details>`}).join("");
 }
 
-$("days").innerHTML=DAYS.map(d=>`<button type="button" data-k="${d.k}" aria-pressed="false"><small>${d.label}</small><b>${d.d}.11.</b></button>`).join("");
+function renderPeriod(){
+  if(!DAYS.length){$("period").textContent="";return}
+  const first=DAYS[0].k,last=DAYS.at(-1).k;
+  const lastTuck=DATA.shows.filter(s=>s.c==="tuck").map(s=>s.d).sort().at(-1);
+  const upd=DATA.updated?new Date(DATA.updated):null;
+  let txt=`Repertoar se automatski osvežava svakog četvrtka ujutru. Trenutni repertoar važi za ${fmtDate(first)}–${fmtDate(last)}${upd?`, osvežen ${upd.getDate()}. ${upd.getMonth()+1}. ${upd.getFullYear()}.`:"."} Cene su za jednu ulaznicu u dinarima, sa zvaničnih cenovnika. Ne računaju se VIP i Love Box sedišta.`;
+  if(lastTuck&&lastTuck<last) txt+=` Tuckwood je objavio termine samo do ${fmtDate(lastTuck)}`;
+  if(DATA.errors?.length) txt+=` Ove nedelje nisu mogli da se preuzmu termini za: ${DATA.errors.join(", ")}.`;
+  if(last<todayStr()) txt=`Pažnja: repertoar je zastareo (poslednji dan ${fmtDate(last)}). `+txt;
+  $("period").textContent=txt;
+}
+
+$("days").innerHTML=DAYS.map(d=>`<button type="button" data-k="${d.k}" aria-pressed="false"><small>${d.label}</small><b>${d.d}.${d.m}.</b></button>`).join("");
 $("days").addEventListener("click",e=>{const b=e.target.closest("button");if(b){S.day=b.dataset.k;render()}});
 $("films").addEventListener("toggle",e=>{const d=e.target;if(d.matches&&d.matches("details.film")){d.open?S.open.add(d.dataset.fid):S.open.delete(d.dataset.fid)}},true);
 $("q").addEventListener("input",e=>{S.q=e.target.value;render()});
 ["student","hidepast"].forEach(id=>$(id).addEventListener("change",render));
-(()=>{const n=new Date();if(n.getFullYear()===2026&&n.getMonth()===10){const d=DAYS.find(x=>x.d===n.getDate());if(d)S.day=d.k}})();
+(()=>{const t=todayStr();if(DAYS.some(d=>d.k===t))S.day=t})();
+renderPeriod();
 render();
 </script>
 </body>
