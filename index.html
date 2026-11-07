@@ -43,6 +43,12 @@ header p{margin:8px 0 0;color:var(--muted);max-width:60ch}
 .check{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
 .check input{width:18px;height:18px;accent-color:var(--accent)}
 button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.genres{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.genres button{flex:0 0 auto;font:inherit;font-size:13px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:3px 12px;cursor:pointer}
+.genres button[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ft .sr{font-weight:400;font-size:14px;color:var(--muted)}
+.ft .sr::before{content:" · "}
+.gen{font-size:12.5px;color:var(--muted);padding:0 2px}
 .daynote{font-size:13px;color:var(--gold);font-weight:500}
 .daynote:empty{display:none}
 .films{display:flex;flex-direction:column;gap:8px}
@@ -92,10 +98,11 @@ details[open]>summary{border-bottom:1px dashed var(--line)}
 
   <div class="days" id="days" role="group" aria-label="Dan"></div>
   <div class="controls">
-    <input id="q" type="search" placeholder="Traži film…" aria-label="Traži film">
+    <input id="q" type="search" placeholder="Traži film (srpski ili originalni naziv)…" aria-label="Traži film">
     <label class="check" for="student"><input id="student" type="checkbox"> CineStar Student Club</label>
     <label class="check" for="hidepast"><input id="hidepast" type="checkbox" checked> Sakrij prošle termine</label>
   </div>
+  <div class="genres" id="genres" role="group" aria-label="Žanr"></div>
   <div class="daynote" id="daynote"></div>
   <div class="films" id="films"></div>
 
@@ -197,7 +204,10 @@ function showsFor(day,student){
 }
 
 /* ---------- Prikaz ---------- */
-const S={day:DAYS[0]?.k,open:new Set(),q:""};
+const S={day:DAYS[0]?.k,open:new Set(),q:"",genre:""};
+const fold=s=>(s||"").toLowerCase().replace(/đ/g,"dj").normalize("NFD").replace(/[̀-ͯ]/g,"");
+const title=f=>f.o||f.n;
+const GENRES=[...new Set(Object.values(FILMS).flatMap(f=>f.g||[]))].sort((a,b)=>a.localeCompare(b,"sr"));
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function fxTags(f){const a=[];if(f.imax)a.push("IMAX");if(f.mx4d)a.push("MX4D");if(f.x4)a.push("4DX");if(f.sx)a.push("ScreenX");a.push(f.d3?"3D":"2D");return a}
@@ -218,21 +228,22 @@ function render(){
   const day=DAYS.find(d=>d.k===S.day), student=$("student").checked, hide=$("hidepast").checked, now=nowMinutesFor(day);
   [...$("days").children].forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===S.day));
   $("daynote").textContent=day.holiday?`${day.holiday}, državni praznik: Cineplexx, CineStar i Tuckwood naplaćuju vikend cene.`:(day.dow===2?"Utorak: snižene cene u Cineplexx-u i CineStaru.":day.dow===3?"Sreda: filmski dan u Tuckwoodu.":"");
-  const all=showsFor(day,student), q=S.q.trim().toLowerCase();
+  [...$("genres").children].forEach(b=>b.setAttribute("aria-pressed",b.dataset.g===S.genre));
+  const all=showsFor(day,student), q=fold(S.q.trim());
   const rows=Object.entries(all).map(([fid,list])=>{
     list=list.filter(s=>!(hide&&s.t<now));
     list.sort((a,b)=>(a.p??1e9)-(b.p??1e9)||a.t-b.t);
     return {fid,film:FILMS[fid],list,best:list.find(s=>s.p!=null)};
-  }).filter(r=>r.list.length&&(!q||r.film.n.toLowerCase().includes(q)))
-    .sort((a,b)=>new Set(b.list.map(s=>s.cin)).size-new Set(a.list.map(s=>s.cin)).size||a.film.n.localeCompare(b.film.n,"sr"));
-  if(!rows.length){$("films").innerHTML=`<p class="empty">${q?"Nijedan film ne odgovara pretrazi.":"Za ovaj dan nema više termina."}</p>`;return}
+  }).filter(r=>r.list.length&&(!q||fold(r.film.n+" | "+(r.film.o||"")).includes(q))&&(!S.genre||(r.film.g||[]).includes(S.genre)))
+    .sort((a,b)=>new Set(b.list.map(s=>s.cin)).size-new Set(a.list.map(s=>s.cin)).size||title(a.film).localeCompare(title(b.film),"sr"));
+  if(!rows.length){$("films").innerHTML=`<p class="empty">${q||S.genre?"Nijedan film ne odgovara pretrazi.":"Za ovaj dan nema više termina."}</p>`;return}
   $("films").innerHTML=rows.map(({fid,film,list,best})=>{
     const cins=new Set(list.map(s=>s.cin)).size, bp=best?best.p:null;
     return `<details class="film" data-fid="${esc(fid)}"${S.open.has(fid)?" open":""}>
-      <summary>${poster(film)}<div class="ft">${esc(film.n)}</div>
+      <summary>${poster(film)}<div class="ft">${esc(title(film))}${film.o?`<span class="sr">${esc(film.n)}</span>`:""}</div>
         <div class="from">${best?`<small>od</small><strong>${bp}</strong>`:""}</div>
         <div class="fm">${list.length} ${list.length===1?"termin":"termina"} · ${cins} ${cins===1?"bioskop":"bioskopa"}${best?` · najjeftinije ${esc(best.cin)} u ${best.tm}`:""}</div></summary>
-      <div class="shows">${list.map(s=>`<div class="stub${s.p!=null&&s.p===bp?" best":""}${s.t<now?" past":""}">
+      <div class="shows">${film.g?.length?`<div class="gen">${film.g.map(esc).join(" · ")}</div>`:""}${list.map(s=>`<div class="stub${s.p!=null&&s.p===bp?" best":""}${s.t<now?" past":""}">
         <div class="main"><div class="cin"><em>${s.tm}</em>${esc(s.cin)}</div>
           <div class="note">${fxTags(s.f).map(x=>`<span class="tag${x==="2D"?"":" fx"}" style="margin:0 4px 0 0">${x}</span>`).join("")}${s.lang} · ${esc(s.note||"")}${s.est?' <span class="tag est">procena</span>':""}</div></div>
         <div class="price">${s.p!=null?`<strong>${s.p}</strong><small>RSD</small>`:`<small style="text-align:right;max-width:9em">${esc(s.na)}</small>`}</div>
@@ -255,6 +266,8 @@ $("days").innerHTML=DAYS.map(d=>`<button type="button" data-k="${d.k}" aria-pres
 $("days").addEventListener("click",e=>{const b=e.target.closest("button");if(b){S.day=b.dataset.k;render()}});
 $("films").addEventListener("toggle",e=>{const d=e.target;if(d.matches&&d.matches("details.film")){d.open?S.open.add(d.dataset.fid):S.open.delete(d.dataset.fid)}},true);
 $("q").addEventListener("input",e=>{S.q=e.target.value;render()});
+$("genres").innerHTML=GENRES.length?[`<button type="button" data-g="" aria-pressed="true">Svi žanrovi</button>`,...GENRES.map(g=>`<button type="button" data-g="${esc(g)}" aria-pressed="false">${esc(g)}</button>`)].join(""):"";
+$("genres").addEventListener("click",e=>{const b=e.target.closest("button");if(b){S.genre=b.dataset.g;render()}});
 ["student","hidepast"].forEach(id=>$(id).addEventListener("change",render));
 (()=>{const t=todayStr();if(DAYS.some(d=>d.k===t))S.day=t})();
 renderPeriod();

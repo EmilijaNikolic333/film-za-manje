@@ -44,7 +44,24 @@ const films = {}, byKey = new Map(), shows = [];
 const norm = s => (s || "").toLowerCase().replace(/đ/g, "dj").normalize("NFD").replace(/[̀-ͯ]/g, "")
   .replace(/\(.*?\)/g, " ").replace(/\b[23]d\b/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
 
-function film({ title, orig, len, poster }) {
+// Isti žanr se različito zove na različitim sajtovima
+const GENRES = {
+  akcijski: "Akcija", akcija: "Akcija", akcioni: "Akcija", animirani: "Animirani", avantura: "Avantura",
+  biografski: "Biografski", "biografska drama": "Biografski", dokumentarni: "Dokumentarni", "dokumentarni film": "Dokumentarni",
+  drama: "Drama", koncert: "Koncert", "koncert live": "Koncert",
+  fantazija: "Fantazija", horor: "Horor", komedija: "Komedija", "kriminalisticki": "Krimi",
+  "porodicni": "Porodični", "porodicni film": "Porodični", "romanticni": "Romantični", "romanticni/ljubavni": "Romantični",
+  sf: "SF", triler: "Triler", opera: "Opera i balet", balet: "Opera i balet", muzicki: "Muzički", mjuzikl: "Muzički"
+};
+const genreOf = g => {
+  const k = (g || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  if (!k) return [];
+  const out = [GENRES[k] || g.trim()[0].toUpperCase() + g.trim().slice(1).toLowerCase()];
+  if (k === "biografska drama") out.push("Drama");
+  return out;
+};
+
+function film({ title, orig, len, poster, genres = [] }) {
   const ev = /\b(live|uživo|uzivo)\b/i.test(title); // prenosi koncerata, opera i sl. imaju posebne cene
   title = title.replace(/\s*[-–]?\s*\b(pretpremijera|pretprodaja)\b/gi, "").trim();
   const keys = [norm(title), norm(orig)].filter(Boolean);
@@ -61,6 +78,9 @@ function film({ title, orig, len, poster }) {
   const f = films[id];
   if (!f.len && len) f.len = len;
   if (!f.poster && poster) f.poster = poster;
+  if (!f.o && !ev && orig && norm(orig) !== norm(f.n)) f.o = orig.trim();
+  const g = new Set([...(f.g || []), ...genres.flatMap(genreOf)]);
+  if (g.size) f.g = [...g].sort((a, b) => a.localeCompare(b, "sr"));
   if (ev) f.ev = 1;
   keys.forEach(k => byKey.has(k) || byKey.set(k, id));
   return id;
@@ -104,7 +124,7 @@ async function cineplexx() {
       const c = CPX_CINEMAS[s.cinemaId], d = s.showtime.slice(0, 10);
       if (!c || !inWindow(d)) continue;
       const tags = (s.technologies?.[0] || []).map(x => String(x).toUpperCase());
-      fid ??= film({ title: m.title.trim(), orig: m.titleOriginalCalculated, len: m.runTime, poster: m.posterImage });
+      fid ??= film({ title: m.title.trim(), orig: m.titleOriginalCalculated, len: m.runTime, poster: m.posterImage, genres: m.genres || [] });
       addShow({ f: fid, c, d, t: s.showtime.slice(11, 16), fx: fxFrom(tags), l: langFrom(tags) });
     }
     await sleep(250);
@@ -114,14 +134,15 @@ async function cineplexx() {
 /* ---------- CineStar Ada Mall (HTML stranica sa svim terminima) ---------- */
 async function cinestar() {
   const $ = cheerio.load(await get("https://cinestarcinemas.rs/beograd-concept-cinema-ada-mall", "text"));
-  $(".movie-item").each((_, el) => {
+  for (const el of $(".movie-item").toArray()) {
     const $m = $(el);
     const title = $m.find(".movie-desc h2").first().text().trim();
-    if (!title) return;
+    if (!title) continue;
     const dur = $m.find(".duration").first().text();
     const len = (+(dur.match(/(\d+)\s*h/)?.[1] || 0)) * 60 + (+(dur.match(/(\d+)\s*min/)?.[1] || 0));
     const poster = $m.find(".poster-wrapper img").first().attr("src");
-    let fid;
+    const genres = [$m.attr("data-genre")];
+    const found = [];
     $m.find(".day-wrapper").each((_, dw) => {
       const dm = $(dw).find(".day").first().text().match(/(\d{1,2})\.(\d{1,2})\./);
       if (!dm) return;
@@ -131,11 +152,23 @@ async function cinestar() {
         const t = $(p).find(".time").first().text().trim();
         if (!/^\d{1,2}:\d{2}$/.test(t)) return;
         const tags = ($(p).attr("data-format") || "").toUpperCase().split("/").map(s => s.trim());
-        fid ??= film({ title, len, poster });
-        addShow({ f: fid, c: "ada", d, t, fx: fxFrom(tags), l: langFrom(tags), ev: tags.includes("LIVE") });
+        found.push({ c: "ada", d, t, fx: fxFrom(tags), l: langFrom(tags), ev: tags.includes("LIVE") });
       });
     });
-  });
+    if (!found.length) continue;
+    // Izvorni naslov je samo na stranici filma; čitamo je kad film još ne znamo iz Cineplexx-a
+    let orig;
+    const link = $m.find(".poster-wrapper").attr("href");
+    if (link && !byKey.has(norm(title.replace(/\s*[-–]?\s*\b(pretpremijera|pretprodaja)\b/gi, "")))) {
+      try {
+        const txt = cheerio.load(await get(link, "text"))("body").text().replace(/\s+/g, " ");
+        orig = txt.match(/Izvorni naslov:\s*(.+?)\s+(?:Režiser|Režija|Uloge|Žanr|Trajanje|Izaberi)\b/)?.[1];
+      } catch { /* bez originalnog naziva */ }
+      await sleep(250);
+    }
+    const fid = film({ title, orig, len, poster, genres });
+    found.forEach(s => addShow({ f: fid, ...s }));
+  }
 }
 
 /* ---------- Tuckwood (WordPress stranica repertoara) ---------- */
@@ -153,6 +186,7 @@ async function tuckwood() {
     const dur = $m.find(".amy-movie-field-duration").first().text();
     const len = (+(dur.match(/(\d+)\s*sat/)?.[1] || 0)) * 60 + (+(dur.match(/(\d+)\s*minut/)?.[1] || 0));
     const poster = $m.find(".amy-movie-item-poster img").first().attr("src");
+    const genres = $m.find(".amy-movie-field-amy_genre a").toArray().map(a => $(a).text());
     let fid;
     $m.find(".amy-cell").each((_, cell) => {
       const dm = $(cell).find(".amy-head").text().toLowerCase().match(/(\d{1,2})\.\s*([a-z]+)\s+(\d{4})/);
@@ -162,7 +196,7 @@ async function tuckwood() {
       $(cell).find(".amy-intro-times > div").each((_, row) => {
         const t = $(row).text().trim().match(/(\d{1,2}:\d{2})$/)?.[1];
         if (!t) return;
-        fid ??= film({ title, orig, len, poster });
+        fid ??= film({ title, orig, len, poster, genres });
         addShow({ f: fid, c: "tuck", d, t, fx: d3 ? ["3D"] : [], l: sinh ? "sinh" : "titl" });
       });
     });
