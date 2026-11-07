@@ -1,5 +1,5 @@
 // Povlači repertoar (i postere) za narednih 7 dana iz Cineplexx (Beograd), CineStar Ada Mall i Tuckwood,
-// i upisuje ga u data.js koji čita index.html. Pokreće se jednom nedeljno preko GitHub Actions.
+// i upisuje ga u data.js koji čita index.html. Pokreće se svakog jutra preko GitHub Actions.
 //   node scripts/update.mjs
 import * as cheerio from "cheerio";
 import { writeFile } from "node:fs/promises";

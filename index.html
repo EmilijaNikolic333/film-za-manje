@@ -79,7 +79,7 @@ details[open]>summary{border-bottom:1px dashed var(--line)}
 @media (max-width:420px){details.film>summary{grid-template-columns:48px minmax(0,1fr) auto}.poster{width:48px}}
 </style>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<!-- data.js pravi skripta scripts/update.mjs (GitHub Actions, svakog četvrtka) -->
+<!-- data.js pravi skripta scripts/update.mjs (GitHub Actions, svakog dana) -->
 <script src="data.js"></script>
 </head>
 <body>
@@ -244,7 +244,7 @@ function renderPeriod(){
   const first=DAYS[0].k,last=DAYS.at(-1).k;
   const lastTuck=DATA.shows.filter(s=>s.c==="tuck").map(s=>s.d).sort().at(-1);
   const upd=DATA.updated?new Date(DATA.updated):null;
-  let txt=`Repertoar se automatski osvežava svakog četvrtka ujutru. Trenutni repertoar važi za ${fmtDate(first)}–${fmtDate(last)}${upd?`, osvežen ${upd.getDate()}. ${upd.getMonth()+1}. ${upd.getFullYear()}.`:"."} Cene su za jednu ulaznicu u dinarima, sa zvaničnih cenovnika. Ne računaju se VIP i Love Box sedišta.`;
+  let txt=`Repertoar se automatski osvežava svakog jutra. Trenutni repertoar važi za ${fmtDate(first)}–${fmtDate(last)}${upd?`, osvežen ${upd.getDate()}. ${upd.getMonth()+1}. ${upd.getFullYear()}.`:"."} Cene su za jednu ulaznicu u dinarima, sa zvaničnih cenovnika. Ne računaju se VIP i Love Box sedišta.`;
   if(lastTuck&&lastTuck<last) txt+=` Tuckwood je objavio termine samo do ${fmtDate(lastTuck)}`;
   if(DATA.errors?.length) txt+=` Ove nedelje nisu mogli da se preuzmu termini za: ${DATA.errors.join(", ")}.`;
   if(last<todayStr()) txt=`Pažnja: repertoar je zastareo (poslednji dan ${fmtDate(last)}). `+txt;

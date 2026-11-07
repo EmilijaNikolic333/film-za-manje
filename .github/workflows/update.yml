@@ -2,8 +2,8 @@ name: Osveži repertoar
 
 on:
   schedule:
-    # svakog četvrtka u 04:00 UTC (5–6h po beogradskom vremenu), kad kreće nova bioskopska nedelja
-    - cron: "0 4 * * 4"
+    # svakog dana u 04:00 UTC (5–6h po beogradskom vremenu)
+    - cron: "0 4 * * *"
   workflow_dispatch: # ručno pokretanje iz kartice Actions
 
 permissions:
