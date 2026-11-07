@@ -48,18 +48,20 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid
 .genres button[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent)}
 .ft .sr{font-weight:400;font-size:14px;color:var(--muted)}
 .ft .sr::before{content:" · "}
-.gen{font-size:12.5px;color:var(--muted);padding:0 2px}
+.gen{grid-column:2;grid-row:2;font-size:12.5px;font-weight:500;color:var(--accent);line-height:1.35}
+.desc{grid-column:2;grid-row:3;font-size:13px;line-height:1.4;color:var(--ink);opacity:.85;margin:2px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+details[open] .desc{display:block;-webkit-line-clamp:unset}
 .daynote{font-size:13px;color:var(--gold);font-weight:500}
 .daynote:empty{display:none}
 .films{display:flex;flex-direction:column;gap:8px}
 details.film{background:var(--paper);border:1px solid var(--line);border-radius:10px}
-details.film>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:2px 12px;padding:10px 14px 10px 10px;align-items:center}
+details.film>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:1px 12px;padding:10px 14px 10px 10px;align-items:start}
 details.film>summary::-webkit-details-marker{display:none}
-.poster{grid-column:1;grid-row:1/3;width:56px;aspect-ratio:2/3;border-radius:5px;object-fit:cover;background:var(--line);display:block}
+.poster{grid-column:1;grid-row:1/5;align-self:start;width:56px;aspect-ratio:2/3;border-radius:5px;object-fit:cover;background:var(--line);display:block}
 div.poster{display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:26px;color:var(--muted)}
-.ft{grid-column:2;grid-row:1;align-self:end;font-weight:600;font-size:16px;line-height:1.3;min-width:0}
-.fm{grid-column:2;grid-row:2;align-self:start;font-size:13px;color:var(--muted)}
-.from{grid-column:3;grid-row:1/3;text-align:right}
+.ft{grid-column:2;grid-row:1;font-weight:600;font-size:16px;line-height:1.3;min-width:0}
+.fm{grid-column:2;grid-row:4;font-size:13px;color:var(--muted)}
+.from{grid-column:3;grid-row:1/5;align-self:center;text-align:right}
 .from small{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .from strong{font-family:var(--f-mono);font-size:20px;font-variant-numeric:tabular-nums;color:var(--accent)}
 details[open]>summary{border-bottom:1px dashed var(--line)}
@@ -242,8 +244,10 @@ function render(){
     return `<details class="film" data-fid="${esc(fid)}"${S.open.has(fid)?" open":""}>
       <summary>${poster(film)}<div class="ft">${esc(title(film))}${film.o?`<span class="sr">${esc(film.n)}</span>`:""}</div>
         <div class="from">${best?`<small>od</small><strong>${bp}</strong>`:""}</div>
+        ${film.g?.length||film.len?`<div class="gen">${[...(film.g||[]).map(esc),film.len?film.len+" min":""].filter(Boolean).join(" · ")}</div>`:""}
+        ${film.d?`<div class="desc">${esc(film.d)}</div>`:""}
         <div class="fm">${list.length} ${list.length===1?"termin":"termina"} · ${cins} ${cins===1?"bioskop":"bioskopa"}${best?` · najjeftinije ${esc(best.cin)} u ${best.tm}`:""}</div></summary>
-      <div class="shows">${film.g?.length?`<div class="gen">${film.g.map(esc).join(" · ")}</div>`:""}${list.map(s=>`<div class="stub${s.p!=null&&s.p===bp?" best":""}${s.t<now?" past":""}">
+      <div class="shows">${list.map(s=>`<div class="stub${s.p!=null&&s.p===bp?" best":""}${s.t<now?" past":""}">
         <div class="main"><div class="cin"><em>${s.tm}</em>${esc(s.cin)}</div>
           <div class="note">${fxTags(s.f).map(x=>`<span class="tag${x==="2D"?"":" fx"}" style="margin:0 4px 0 0">${x}</span>`).join("")}${s.lang} · ${esc(s.note||"")}${s.est?' <span class="tag est">procena</span>':""}</div></div>
         <div class="price">${s.p!=null?`<strong>${s.p}</strong><small>RSD</small>`:`<small style="text-align:right;max-width:9em">${esc(s.na)}</small>`}</div>

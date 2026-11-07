@@ -61,7 +61,16 @@ const genreOf = g => {
   return out;
 };
 
-function film({ title, orig, len, poster, genres = [] }) {
+// Kratak opis: do ~220 znakova, sečemo na kraju rečenice ili reči
+function shorten(text, max = 220) {
+  const raw = (text || "").replace(/\s+/g, " ").trim();
+  const s = raw.replace(/\s*(\.\.\.|…)$/, "").trim();
+  if (s.length <= max) return s !== raw && !/[.!?]$/.test(s) ? s.replace(/[,;:–-]$/, "") + "…" : s;
+  const cut = s.slice(0, max), dot = cut.lastIndexOf(". ");
+  return dot > max * 0.5 ? cut.slice(0, dot + 1) : cut.slice(0, cut.lastIndexOf(" ")).replace(/[,;:–-]$/, "") + "…";
+}
+
+function film({ title, orig, len, poster, genres = [], desc }) {
   const ev = /\b(live|uživo|uzivo)\b/i.test(title); // prenosi koncerata, opera i sl. imaju posebne cene
   title = title.replace(/\s*[-–]?\s*\b(pretpremijera|pretprodaja)\b/gi, "").trim();
   const keys = [norm(title), norm(orig)].filter(Boolean);
@@ -81,6 +90,7 @@ function film({ title, orig, len, poster, genres = [] }) {
   if (!f.o && !ev && orig && norm(orig) !== norm(f.n)) f.o = orig.trim();
   const g = new Set([...(f.g || []), ...genres.flatMap(genreOf)]);
   if (g.size) f.g = [...g].sort((a, b) => a.localeCompare(b, "sr"));
+  if (!f.d && desc) { const d = shorten(desc); if (d.length > 30) f.d = d; }
   if (ev) f.ev = 1;
   keys.forEach(k => byKey.has(k) || byKey.set(k, id));
   return id;
@@ -124,7 +134,7 @@ async function cineplexx() {
       const c = CPX_CINEMAS[s.cinemaId], d = s.showtime.slice(0, 10);
       if (!c || !inWindow(d)) continue;
       const tags = (s.technologies?.[0] || []).map(x => String(x).toUpperCase());
-      fid ??= film({ title: m.title.trim(), orig: m.titleOriginalCalculated, len: m.runTime, poster: m.posterImage, genres: m.genres || [] });
+      fid ??= film({ title: m.title.trim(), orig: m.titleOriginalCalculated, len: m.runTime, poster: m.posterImage, genres: m.genres || [], desc: m.descriptionCalculated || m.descriptionShortCalculated });
       addShow({ f: fid, c, d, t: s.showtime.slice(11, 16), fx: fxFrom(tags), l: langFrom(tags) });
     }
     await sleep(250);
@@ -142,6 +152,7 @@ async function cinestar() {
     const len = (+(dur.match(/(\d+)\s*h/)?.[1] || 0)) * 60 + (+(dur.match(/(\d+)\s*min/)?.[1] || 0));
     const poster = $m.find(".poster-wrapper img").first().attr("src");
     const genres = [$m.attr("data-genre")];
+    const desc = $m.find(".movie-desc > p").first().text().split(/Napomena:/)[0];
     const found = [];
     $m.find(".day-wrapper").each((_, dw) => {
       const dm = $(dw).find(".day").first().text().match(/(\d{1,2})\.(\d{1,2})\./);
@@ -166,7 +177,7 @@ async function cinestar() {
       } catch { /* bez originalnog naziva */ }
       await sleep(250);
     }
-    const fid = film({ title, orig, len, poster, genres });
+    const fid = film({ title, orig, len, poster, genres, desc });
     found.forEach(s => addShow({ f: fid, ...s }));
   }
 }
@@ -187,6 +198,7 @@ async function tuckwood() {
     const len = (+(dur.match(/(\d+)\s*sat/)?.[1] || 0)) * 60 + (+(dur.match(/(\d+)\s*minut/)?.[1] || 0));
     const poster = $m.find(".amy-movie-item-poster img").first().attr("src");
     const genres = $m.find(".amy-movie-field-amy_genre a").toArray().map(a => $(a).text());
+    const desc = $m.find(".amy-movie-field-desc").first().text();
     let fid;
     $m.find(".amy-cell").each((_, cell) => {
       const dm = $(cell).find(".amy-head").text().toLowerCase().match(/(\d{1,2})\.\s*([a-z]+)\s+(\d{4})/);
@@ -196,7 +208,7 @@ async function tuckwood() {
       $(cell).find(".amy-intro-times > div").each((_, row) => {
         const t = $(row).text().trim().match(/(\d{1,2}:\d{2})$/)?.[1];
         if (!t) return;
-        fid ??= film({ title, orig, len, poster, genres });
+        fid ??= film({ title, orig, len, poster, genres, desc });
         addShow({ f: fid, c: "tuck", d, t, fx: d3 ? ["3D"] : [], l: sinh ? "sinh" : "titl" });
       });
     });
