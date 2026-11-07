@@ -6,7 +6,7 @@ import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 const OUT = fileURLToPath(new URL("../data.js", import.meta.url));
-const UA = "film-za-manje-bot (+https://github.com/EmilijaNikolic333/karta-za-manje)";
+const UA = "film-za-manje-bot (+https://github.com/EmilijaNikolic333/film-za-manje)";
 const DAYS_AHEAD = 7;
 const MIN_SHOWS = 50; // ispod ovoga nešto ne valja: ne prepisujemo stare podatke
 
